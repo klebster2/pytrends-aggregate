@@ -4,6 +4,21 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
+class Timeframe:
+    def __init__(self, datetime_start: datetime, datetime_end: datetime):
+        self.datetime_start = datetime_start
+        self.datetime_end = datetime_end
+
+    @staticmethod
+    def _get_str_interval(start_datetime: date, end_datetime: date) -> str:
+        return "{} {}".format(
+            start_datetime.strftime("%Y-%m-%d"),
+            end_datetime.strftime("%Y-%m-%d"),
+        )
+
+    def __str__(self):
+        return self._get_str_interval(self.datetime_start, self.datetime_end)
+
 class Timeframes:
 
     def __init__(self, datetime_start: datetime, datetime_end: datetime, max_interval_days:int):
@@ -21,23 +36,14 @@ class Timeframes:
 
             if end_interval_datetime > self.datetime_end:
                 datetime_chunks.append(
-                        self._get_str_interval(start_interval_datetime, self.datetime_end)
+                    Timeframe(start_interval_datetime, self.datetime_end)
                 )
                 break
             else:
                 datetime_chunks.append(
-                        self._get_str_interval(start_interval_datetime, end_interval_datetime)
+                    Timeframe(start_interval_datetime, end_interval_datetime)
                 )
 
             start_interval_datetime = end_interval_datetime
 
         return datetime_chunks
-
-    def _get_str_interval(self, start_datetime: date, end_datetime: date) -> str:
-        return "{} {}".format(
-            start_datetime.strftime("%Y-%m-%d"),
-            end_datetime.strftime("%Y-%m-%d"),
-        )
-
-
-
