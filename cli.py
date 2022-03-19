@@ -227,7 +227,6 @@ class PyTrendTableManager(TrendReq):
                 group.extend(kw_list[:4])
             else:
                 group = kw_list[:5]
-            print("running: ", ','.join(group), end='\n')
 
             #group = set(group).union(set(too_little_data))
             if len(too_little_data)>0 and too_little_data[-1] == group[0]:
@@ -236,7 +235,7 @@ class PyTrendTableManager(TrendReq):
 
             self.i+=1
             self.batch_counter+=1
-            print(f"generating kw_list of {len(group)}")
+            print(f"generating kw_list of {len(group)}", end =' ')
 
             df2, error = self.build_payload_get_interest_over_intervals(
                 KwList._kwlist_unique_elements(group)
@@ -412,7 +411,6 @@ if __name__=="__main__":
             if ws.title == f"PyTrends{days}"
         ].pop()
         trends_df = get_pytrends(search_term_list, days)
-        import pdb; pdb.set_trace()
 
         if days == 365:
             trends_df = trends_df.resample('D').interpolate('cubic')
