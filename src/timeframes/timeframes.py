@@ -5,19 +5,33 @@ from datetime import datetime
 from datetime import timedelta
 
 class Timeframe:
-    def __init__(self, datetime_start: datetime, datetime_end: datetime):
-        self.datetime_start = datetime_start
-        self.datetime_end = datetime_end
+    def __init__(self, datetime_start, datetime_end):
+        self._datetime_start = datetime_start
+        self._datetime_end = datetime_end
 
-    @staticmethod
-    def _get_str_interval(start_datetime: date, end_datetime: date) -> str:
-        return "{} {}".format(
-            start_datetime.strftime("%Y-%m-%d"),
-            end_datetime.strftime("%Y-%m-%d"),
-        )
+    @property
+    def datetime_start(self):
+        """getter"""
+        return self._datetime_start
+
+    @property
+    def datetime_end(self):
+        """getter"""
+        return self._datetime_end
+
+    @datetime_start.setter
+    def datetime_start(self, value):
+        self._datetime_start = value
+
+    @datetime_end.setter
+    def datetime_end(self, value):
+        self._datetime_end = value
 
     def __str__(self):
-        return self._get_str_interval(self.datetime_start, self.datetime_end)
+        return "{} {}".format(
+            self.datetime_start.strftime("%Y-%m-%d"),
+            self.datetime_end.strftime("%Y-%m-%d"),
+        )
 
 class Timeframes:
 
@@ -33,7 +47,6 @@ class Timeframes:
 
         while True:
             end_interval_datetime = start_interval_datetime + timedelta(self.max_interval_days)
-
             if end_interval_datetime > self.datetime_end:
                 datetime_chunks.append(
                     Timeframe(start_interval_datetime, self.datetime_end)
