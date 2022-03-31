@@ -11,9 +11,6 @@ from abc import abstractmethod
 import json
 import re
 
-from collections import deque
-from itertools import islice
-
 from pytrends.request import TrendReq
 import pytrends
 
@@ -105,14 +102,6 @@ class PyTrendTableManager(TrendReq):
     def _partition_cols(df, cutoff_pct):
         above_cutoff = (df.nunique()>cutoff_pct)
         return df.nunique()[above_cutoff], df.nunique()[~above_cutoff]
-
-    @staticmethod
-    def get_backoff_retry(below_cutoff_cols, too_little_data):
-        """
-        get retry kw_list
-        """
-        below_cutoff_cols.extend(too_little_data)
-        return below_cutoff_cols
 
     def build_payload_get_interest_over_intervals(self, kw_list):
         df = pd.DataFrame([])
@@ -290,7 +279,7 @@ class PyTrendTableManager(TrendReq):
         self,
         df: pd.DataFrame,
         df2: pd.DataFrame,
-        pivot_col: list,
+        pivot_col: str,
     ) -> pd.DataFrame:
         """
         currently just for axis=1 (column updates)
@@ -401,24 +390,24 @@ class PyTrendTableManager(TrendReq):
                 cutoff_pct=self.cutoff_pct,
             )
             keep_cols = self._get_next_pivots(cols=cols_above_cutoff)
-
             retry_cols = self._get_next_pivots(cols=cols_below_cutoff)
 
             # get 'low quality' kw (columns) to retry as defined by cutoff_pct
             # and columns there was too little data for
-            kw_list_pass = self.get_backoff_retry(
-                below_cutoff_cols=retry_cols,
-                too_little_data=too_little_data,
-            )
+            too_little_data.extend(retry_cols)
+            kw_list_pass = too_little_data
             # keep_cols[-1] is used to pivot and join the data
             ### TODO: UPDATE THE FOLLOWING TWO LINES
             kw_list_pass.insert(0, keep_cols[-1])
 
-            df2 = df2[keep_cols]
-
-            df = self.update_df(df, df2, keep_cols[-1])
+#            df2 = df2[keep_cols]
 
             import pdb; pdb.set_trace()
+            if not df.empty:
+                df = self.update_df(df, df2[keep_cols], keep_cols[-1])
+            else:
+                df = df2
+
         return df
 
 def get_pytrends(pytrends_terms: list, days_ago=365):
