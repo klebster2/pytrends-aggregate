@@ -28,6 +28,7 @@ class PyTrendTableManager(TrendReq):
         self.sleep=sleep
         self.batch_counter=0
 
+    # TODO make a pytrends-df class object
     @staticmethod
     def df_drop_partial(df:pd.DataFrame) -> pd.DataFrame:
         return df[df.isPartial=="False"].drop("isPartial", axis=1)
@@ -49,14 +50,14 @@ class PyTrendTableManager(TrendReq):
 
     @staticmethod
     def _pivot_ok(pivot: float) -> bool:
-        if math.isnan(pivot):
+        if not pivot:
+            print(f"Error. Pivot is zero or None")
+            return False
+        elif math.isnan(pivot):
             print(f"Error. Pivot is nan")
             return False
         elif math.isinf(pivot):
             print(f"Error. Pivot is inf")
-            return False
-        elif pivot==0:
-            print(f"Error. Pivot is zero")
             return False
         else:
             print("Pivot ok")
@@ -96,7 +97,6 @@ class PyTrendTableManager(TrendReq):
         error = False
 
         for timeframe in self.timeframes:
-            #2. build_payload_get_interest
             df2 = self.build_payload_get_interest(
                 kw_list=kw_list,
                 timeframe=str(timeframe),
@@ -129,9 +129,7 @@ class PyTrendTableManager(TrendReq):
                     )
 
                     pivot_col = self.get_pivot_col(
-                        df=self.df_drop_partial(
-                            df=df2,
-                        ),
+                        df=self.df_drop_partial(df=df2),
                     )
 
                     error, pivot = self.get_pivot(
@@ -146,7 +144,6 @@ class PyTrendTableManager(TrendReq):
                 pivot = 1
 
             df2.drop("isPartial", axis=1, inplace=True)
-
             df2 = df2.mul(pivot)
 
             df = pd.concat([df, df2], axis=0)
@@ -179,20 +176,20 @@ class PyTrendTableManager(TrendReq):
         assumes pivot is being joined where ref_df and new_df have single index
         """
 
-        error = False
         ref_max = ref_df[pivot_symbol].max()
         new_max = new_df[pivot_symbol].max()
 
-        pivot = float(ref_max/new_max)
-
-        if not self._pivot_ok(pivot) or (ref_max == 0 or new_max == 0):
+        if (ref_max == 0 or new_max == 0):
             # axis=0 axis is time:        {pivot_index}@{df2.iloc[0,:].index}
             # axis=1 axis is search term: {pivot_column}@{pivot_symbol}
             print("Setting error, because pivot was not ok.")
             error = True
+            pivot = None
+        else:
+            error = False
+            pivot = float(ref_max/new_max)
 
         return error, pivot
-
 
     def scale_update_df(
         self,
@@ -209,7 +206,6 @@ class PyTrendTableManager(TrendReq):
             new_df=new_df,
             pivot_symbol=pivot_symbol
         )
-
         if drop_pivot:
             new_df = new_df.drop([pivot_symbol], axis=axis).mul(pivot)
         else:
@@ -221,14 +217,12 @@ class PyTrendTableManager(TrendReq):
         """
         Divide and conquer strategy
         """
-        # job 1
         # zeros group (with predefined pivot on far right of df, left of df2):
         subgroup_1 = df2.max()[df2.max()==0].index.tolist()
         subgroup_2 = df2.max()[df2.max()!=0].index.tolist()
         subgroup_1_element = df.columns[df.columns.isin(subgroup_1)].item()
-
-        #pivot = df.columns[df.columns.isin((df2.max()!=0).index.tolist())].item()
         # this may go wrong when timeframe gets updated
+        # (e.g. if between 08/04/2021 and 09/04/2021)
         df2_1, error1 = self.build_payload_get_interest_over_intervals(subgroup_1)
         df2_1, pivot2_1, error2 = self.scale_update_df(
             ref_df=df,
@@ -239,10 +233,9 @@ class PyTrendTableManager(TrendReq):
 
         subgroup_2 = df2.max()[df2.max()!=0].index.tolist()
         subgroup_2.append(df.max()[df.max()>=100].index.tolist()[0])
-
-        # this may go wrong when timeframe is variable
+        # this may go wrong when timeframe gets updated
+        # (e.g. if between 08/04/2021 and 09/04/2021)
         df2_2, error3 = self.build_payload_get_interest_over_intervals(subgroup_2)
-
         df2_2, pivot2_2, error4 = self.scale_update_df(
             ref_df=df,
             new_df=df2_2,
@@ -268,7 +261,6 @@ class PyTrendTableManager(TrendReq):
     ) -> pd.DataFrame:
         """
         currently just for axis=1 (column updates)
-
         update df with the contents of df2 (includes the scaling)
         """
 
@@ -280,18 +272,15 @@ class PyTrendTableManager(TrendReq):
                 axis=1,
             )
             if error:
-                print("Error ", error, end=' ')
-                # divide and conquer approach
+                print("Error ", error, end=' ')  # Attempt divide and conquer
                 try:
                     df = self.scale_update_df_split_columns(df, df2, pivot)
+                    import pdb; pdb.set_trace()
                 except Exception as e:
                     print("Error ", e, end=' ')
-                    import pdb; pdb.set_trace()
             else:
                 # no error
                 df = pd.concat([df, df2_scaled], axis=1)
-
-            print()
         else:
             # the 'first time' case
             df = df2
@@ -357,15 +346,15 @@ class PyTrendTableManager(TrendReq):
         if df.empty:
             return df
         else:
-            import pdb; pdb.set_trace()
-            df = df[df.columns.difference(df2.columns).tolist() + [except_col]]
-        return df
+            df = df[
+                df.columns.difference(df2.columns).tolist() + [except_col]
+            ]
+            return df
 
 
     def run_backoff(self, kw_list, granularity):
         kw_list_pass = kw_list # 1st pass
         df  = pd.DataFrame([])
-        import pdb; pdb.set_trace()
 
         for pass_idx in range(1, granularity + 1):
             print(f"pass {pass_idx} out of {granularity}")
@@ -376,6 +365,7 @@ class PyTrendTableManager(TrendReq):
                 df=df2,
                 cutoff_pct=self.cutoff_pct,
             )
+
             keep_cols = self._get_next_pivots(cols=cols_above_cutoff)
             retry_cols = self._get_next_pivots(cols=cols_below_cutoff)
 

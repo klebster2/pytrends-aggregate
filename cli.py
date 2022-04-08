@@ -36,16 +36,15 @@ def rstrip_split(l):
 if __name__=="__main__":
     for days in [365]:
         trends_df = get_pytrends(
-                [
-                    "MFST", #1
-                    "Pytrends", #2
-                    "Google Trends", #3
-                    "George Bush", #4
-                    "9-11", #5
-                    "rehabilitation", #7
-                    "AAPL", #8
-                ],
-                days,
+            [
+                "MSFT", #1
+                "Pytrends", #2
+                "Google Trends", #3
+                "George Bush", #4
+                "9-11", #5
+                "rehabilitation", #7
+                "AAPL", #8
+            ],
+            days,
         )
-        import pdb; pdb.set_trace()
         print(trends_df)
