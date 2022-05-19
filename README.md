@@ -5,7 +5,7 @@ Aggregate 5+ search terms and longer time periods set by the Google Trends API w
 # Installation
 
 ```bash
-python -m pip install git+https://github.com/klebster2/pytrends-aggregate.git@update
+python -m pip install git+https://github.com/klebster2/pytrends-aggregate.git@master
 ```
 
 # Usage Notes
