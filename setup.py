@@ -24,4 +24,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.5",
     install_requires=['pytrends'],
+    entry_points={
+        'console_scripts':['pytrends_aggregate=cli:main']
+    }
 )

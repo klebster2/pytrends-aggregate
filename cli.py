@@ -74,7 +74,7 @@ def get_args():
     )
     return parser.parse_args()
 
-if __name__=="__main__":
+def main():
     args = get_args()
     trends_dfs_to_aggregate = {}
 
@@ -101,3 +101,6 @@ if __name__=="__main__":
             )
 
             trends_df.to_csv(args.outpath, sep=args.csv_sep)
+
+if __name__=="__main__":
+    main()

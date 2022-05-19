@@ -2,9 +2,15 @@
 
 Aggregate 5+ search terms and longer time periods set by the Google Trends API which is accessed by the pytrends python library.
 
-Note that you should use this sparingly, as you can run into 429 errors (too many requests) frequently if you abuse the API.
+# Installation
+
+```bash
+python -m pip install git+https://github.com/klebster2/pytrends-aggregate.git@update
+```
 
 # Usage Notes
+
+Note that you should use this sparingly, as you can run into 429 errors (too many requests) if frequently you abuse the (implicit) API quota.
 
 To search for a large group of trends over a long period, you could use:
 
