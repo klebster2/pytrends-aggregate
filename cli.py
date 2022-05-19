@@ -50,15 +50,20 @@ def get_args():
     )
     parser.add_argument(
         '--aggregate',
-        dest='aggregate',
-        type=bool,
+        action="store_true",
         help='aggregate over search terms naively (adding them together)',
     )
     parser.add_argument(
-        '--tsv',
-        dest='tsv_outpath',
+        '--sep',
+        dest='csv_sep',
+        type=str,
+        help='separator for csv file'
+    )
+    parser.add_argument(
+        '--outpath',
+        dest='outpath',
         type=Path,
-        help='tsv output path'
+        help='file output path'
     )
     parser.add_argument(
         '-D',
@@ -74,7 +79,7 @@ if __name__=="__main__":
     trends_dfs_to_aggregate = {}
 
     if args.aggregate:
-
+        # expand data into aggregation by simply summing
         aggregation = pd.DataFrame(
             {
                 main_term: get_pytrends(
@@ -85,10 +90,8 @@ if __name__=="__main__":
             }
         )
 
-        aggregation.to_csv(
-            args.tsv_outpath,
-            sep='\t',
-        )
+        aggregation.to_csv(args.outpath, sep=args.csv_sep)
+
     else:
 
         for pytrends_terms in args.json.values():
@@ -97,9 +100,4 @@ if __name__=="__main__":
                 days_ago=args.days,
             )
 
-            trends_df.to_csv(
-                args.tsv_outpath,
-                sep='\t',
-            )
-
-            import pdb; pdb.set_trace()
+            trends_df.to_csv(args.outpath, sep=args.csv_sep)
