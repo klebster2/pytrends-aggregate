@@ -24,11 +24,14 @@ You can aggregate also (simple sum) of the data altogether using the argument:
 
 Another option might be to take `pct_change()` day by day, and aggregate correlated groups only.
 
-In the "Market Pulses" data above, the following groups may be correlated:
+In the "Market Pulses" data above, the following groups may be correlated.
 
 ```
-'{"Market Pulses Fear":["market crash","recession","pandemic","war","disaster","inflation","debt"]}'
-'{"Market Pulses Greed"}:["should I buy","FTSE","SP500","index fund","earnings","hodl"]'
+# fear
+'{"Market Pulses":["market crash","recession","pandemic","war","disaster","inflation","debt"]}'
+# greed
+'{"Market Pulses"}:["should I buy","FTSE","SP500","index fund","earnings","hodl"]'
 ```
 
 It may be interesting to compute statistics (Moving Averages, etc.) over the trends before providing them as input to a model.
+
