@@ -1,9 +1,19 @@
 from src.timeframes.timeframes import Timeframes
 from src.kw_list import KwList
 
+from src.utils import (
+    drop_col_ispartial,
+    drop_rows_ispartial_false,
+    last_index_nonzero,
+    get_cols_where_last_index_nonzero,
+    get_pivot_col,
+    partition_cols,
+    get_data_granularity,
+    get_new_group,
+)
+
 from typing import Iterator, Tuple
 
-import numpy as np
 import math
 
 from pytrends.request import TrendReq
@@ -17,8 +27,9 @@ class PyTrendTableManager(TrendReq):
     def __init__(
         self,
         timeframes: Timeframes,
-        cutoff_pct: 10,
-        sleep=60,
+        cutoff_pct:float = 10.0,
+        sleep:float = 60.0,
+        verbose:bool = True,
     ) -> None:
 
         super().__init__()
@@ -27,70 +38,27 @@ class PyTrendTableManager(TrendReq):
         self.cutoff_pct=cutoff_pct
         self.sleep=sleep
         self.batch_counter=0
+        self.verbose=verbose
 
-    # TODO make a pytrends-df class object
-    @staticmethod
-    def df_drop_partial(df:pd.DataFrame) -> pd.DataFrame:
-        return df[df.isPartial=="False"].drop("isPartial", axis=1)
-
-    @staticmethod
-    def last_index_nonzero(df:pd.DataFrame) -> pd.Index:
-        return (df[(df!=0).any(axis=1)].iloc[-1]!=0)
-
-    def get_cols_where_last_index_nonzero(self, df:pd.DataFrame) -> pd.DataFrame:
-        return df.columns[self.last_index_nonzero(df)]
-
-    @staticmethod
-    def get_pivot_col(df:pd.DataFrame) -> str:
-        """
-        df.max() will get the maximum columns
-        then the sort and index[0] will get the maximum value column
-        """
-        return df.max().sort_values(ascending=False).index[0]
-
-    @staticmethod
-    def _pivot_ok(pivot: float) -> bool:
+    def _pivot_ok(self, pivot: float) -> bool:
         if not pivot:
-            print(f"Error. Pivot is zero or None")
+            print(f"Error. Pivot is zero or None") if self.verbose else None
             return False
         elif math.isnan(pivot):
-            print(f"Error. Pivot is nan")
+            print(f"Error. Pivot is nan") if self.verbose else None
+
             return False
         elif math.isinf(pivot):
-            print(f"Error. Pivot is inf")
+            print(f"Error. Pivot is inf") if self.verbose else None
+
             return False
         else:
-            print("Pivot ok")
+            print("Pivot ok") if self.verbose else None
             return True
-
-    @staticmethod
-    def get_new_group(df:pd.DataFrame, kw_list, too_little_data) -> list:
-        """
-        This is bound to the maximum number of keywords 5 you can sent using the
-        API
-        """
-        if not df.empty:
-            group = [df.columns[-1]]
-            group.extend(kw_list[:4])
-        else:
-            group = kw_list[:5]
-        if len(too_little_data)>0 and too_little_data[-1] == group[0]:
-            # better reaction when there's a removal
-            group[0] = df.columns[-1]
-        return group
-
-    @staticmethod
-    def get_data_granularity(df: pd.DataFrame) -> float:
-        return 100 * df.nunique().sum() / np.dot(*df.shape)
 
     @staticmethod
     def _get_next_pivots(cols: pd.Series) -> list:
         return cols.sort_values(ascending=False).index.tolist()
-
-    @staticmethod
-    def _partition_cols(df, cutoff_pct):
-        above_cutoff = (df.nunique()>cutoff_pct)
-        return df.nunique()[above_cutoff], df.nunique()[~above_cutoff]
 
     def build_payload_get_interest_over_intervals(self, kw_list):
         df = pd.DataFrame([])
@@ -103,9 +71,8 @@ class PyTrendTableManager(TrendReq):
             )
 
             if not df.empty:
-
-                pivot_col = self.get_pivot_col(
-                    df=df[self.get_cols_where_last_index_nonzero(df)],
+                pivot_col = get_pivot_col(
+                    df[get_cols_where_last_index_nonzero(df)],
                 )
 
                 assert df.iloc[-1,:].name == df2.iloc[0,:].name
@@ -117,7 +84,7 @@ class PyTrendTableManager(TrendReq):
                 )
 
                 if not self._pivot_ok(pivot) or error:
-                    pivot_index = self.last_index_nonzero(df).name
+                    pivot_index = last_index_nonzero(df).name
 
                     # set a new start time using pivot_index
                     retry_timeframe = copy.deepcopy(timeframe)
@@ -128,9 +95,8 @@ class PyTrendTableManager(TrendReq):
                         timeframe=str(retry_timeframe),
                     )
 
-                    pivot_col = self.get_pivot_col(
-                        df=self.df_drop_partial(df=df2),
-                    )
+                    df = drop_col_ispartial(drop_rows_ispartial_false(df))
+                    pivot_col = self.get_pivot_col(df)
 
                     error, pivot = self.get_pivot(
                         ref_df=df.loc[pivot_index],
@@ -143,7 +109,7 @@ class PyTrendTableManager(TrendReq):
             else:
                 pivot = 1
 
-            df2.drop("isPartial", axis=1, inplace=True)
+            df2 = drop_col_ispartial(df2)
             df2 = df2.mul(pivot)
 
             df = pd.concat([df, df2], axis=0)
@@ -161,7 +127,7 @@ class PyTrendTableManager(TrendReq):
             timeframe=timeframe,
         )
         try:
-            df = self.interest_over_time()
+            df = pd.DataFrame(self.interest_over_time())
         except pytrends.exceptions.ResponseError as pytrend_response_error:
             print(pytrend_response_error)
         return df
@@ -173,7 +139,7 @@ class PyTrendTableManager(TrendReq):
         pivot_symbol:str,
     ) -> Iterator[Tuple[bool, float]]:
         """
-        assumes pivot is being joined where ref_df and new_df have single index
+        Assume pivot is being joined where ref_df and new_df have single index
         """
 
         ref_max = ref_df[pivot_symbol].max()
@@ -182,7 +148,8 @@ class PyTrendTableManager(TrendReq):
         if (ref_max == 0 or new_max == 0):
             # axis=0 axis is time:        {pivot_index}@{df2.iloc[0,:].index}
             # axis=1 axis is search term: {pivot_column}@{pivot_symbol}
-            print("Setting error, because pivot was not ok.")
+            print("Error, either the numerator or denomintator was not ok.") if self.verbose else None
+
             error = True
             pivot = None
         else:
@@ -206,10 +173,10 @@ class PyTrendTableManager(TrendReq):
             new_df=new_df,
             pivot_symbol=pivot_symbol
         )
-        if drop_pivot:
-            new_df = new_df.drop([pivot_symbol], axis=axis).mul(pivot)
-        else:
-            new_df = new_df.mul(pivot)
+        new_df = new_df.drop(
+            [pivot_symbol],
+            axis=axis
+        ).mul(pivot) if drop_pivot else new_df.mul(pivot)
 
         return new_df, pivot, error
 
@@ -221,7 +188,7 @@ class PyTrendTableManager(TrendReq):
         subgroup_1 = df2.max()[df2.max()==0].index.tolist()
         subgroup_2 = df2.max()[df2.max()!=0].index.tolist()
         subgroup_1_element = df.columns[df.columns.isin(subgroup_1)].item()
-        # this may go wrong when timeframe gets updated
+        # this may go wrong if timeframe gets updated during runtime
         # (e.g. if between 08/04/2021 and 09/04/2021)
         df2_1, error1 = self.build_payload_get_interest_over_intervals(subgroup_1)
         df2_1, pivot2_1, error2 = self.scale_update_df(
@@ -272,12 +239,12 @@ class PyTrendTableManager(TrendReq):
                 axis=1,
             )
             if error:
-                print("Error ", error, end=' ')  # Attempt divide and conquer
+                # Attempt divide and conquer approach
+                print("Error ", error, end=' ')  if self.verbose else None
                 try:
                     df = self.scale_update_df_split_columns(df, df2, pivot)
-                    import pdb; pdb.set_trace()
                 except Exception as e:
-                    print("Error ", e, end=' ')
+                    print("Error ", e, end=' ') if self.verbose else None
             else:
                 # no error
                 df = pd.concat([df, df2_scaled], axis=1)
@@ -293,20 +260,20 @@ class PyTrendTableManager(TrendReq):
         """
 
         self.i=0
-        df  = pd.DataFrame([])
-        df2 = pd.DataFrame([])
+        df  = pd.DataFrame()
+        df2 = pd.DataFrame()
 
         too_little_data = []
         break_flag = False
 
         while True:
-            group=self.get_new_group(
+            group=get_new_group(
                 df,
                 kw_list,
                 too_little_data
             )
             self.i+=1
-            print(f"Generated kw_list of {len(group)}, done shape:{df.shape}")
+            print(f"Generated kw_list of {len(group)}") if self.verbose else None
 
             df2, error = self.build_payload_get_interest_over_intervals(
                 kw_list=KwList._kwlist_unique_elements(group)
@@ -324,7 +291,7 @@ class PyTrendTableManager(TrendReq):
             # remove columns that are empties (if any exist); append to a list
             little_data = df.T[df_empties].T.columns.tolist()
             if little_data:
-                print("not enough data found for ", little_data)
+                print("Not enough data found for ", little_data) if self.verbose else None
                 too_little_data.extend(little_data)
 
             # break clause
@@ -337,31 +304,16 @@ class PyTrendTableManager(TrendReq):
 
         return df, too_little_data
 
-    @staticmethod
-    def drop_intersecting_cols_from_df(
-        df:pd.DataFrame,
-        df2:pd.DataFrame,
-        except_col:str,
-    ) -> pd.DataFrame:
-        if df.empty:
-            return df
-        else:
-            df = df[
-                df.columns.difference(df2.columns).tolist() + [except_col]
-            ]
-            return df
-
-
     def run_backoff(self, kw_list, granularity):
         kw_list_pass = kw_list # 1st pass
         df  = pd.DataFrame([])
 
         for pass_idx in range(1, granularity + 1):
-            print(f"pass {pass_idx} out of {granularity}")
+            print(f"Pass {pass_idx} out of granularity passes: {granularity}") if self.verbose else None
             df2, too_little_data = self.run_groups(kw_list_pass)
 
             # the following line will get data that has low 'granularity'
-            cols_above_cutoff, cols_below_cutoff = self._partition_cols(
+            cols_above_cutoff, cols_below_cutoff = partition_cols(
                 df=df2,
                 cutoff_pct=self.cutoff_pct,
             )
@@ -378,7 +330,15 @@ class PyTrendTableManager(TrendReq):
             kw_list_pass.insert(0, keep_cols[-1])
 
             if not df.empty:
-                df = self.update_df(df, df2[keep_cols], keep_cols[-1])
+                df2 = drop_col_ispartial(drop_rows_ispartial_false(df2[keep_cols]))
+                df = self.update_df(df.drop(keep_cols[:-1],axis=1), df2, keep_cols[-1])
+
+                #df2_scaled, pivot, error = self.scale_update_df(
+                #    ref_df=df,
+                #    new_df=df2,
+                #    pivot_symbol=pivot_col,
+                #    axis=1,
+                #)
             else:
                 df = df2
 
