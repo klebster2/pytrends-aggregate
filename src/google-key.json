@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "rpi-watchlist",
+  "private_key_id": "1bff4ce75a90eb894cc3623d4807adf31bc49ccd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDcjJeUaFAF1sYD\naGkFxjpNe6DGKaA0+jmAqGXfoxSW6JlMmamz3svWcRzJCyv33K5fjeQA+BGV9u8s\not5IQ5aT3tsZuEUE080HuX1BkSPkLEZijXxIbeBh4pKsZl5D9yN4TTIxDbu+W+2L\no8xF+8/lyAyVWYTK2NhKu9eOXZ95C5eJ1ZoShyTs/V5kDow17pop71+sKBYm69aS\n+lptkz3GrlPbM5tt8qFgvwZwWJYh97gQZqeZKJ9It0LidM+7EcU7ycQJcnI16Px7\nvMUvri0Nklxw6bDXk7FjsWTSevPONicaaE+gyx9jK5F28QbDZWv74WOw+uJDgcft\n6GKWtyKDAgMBAAECggEAGSDfqGYWMAQffYXo6WKDhA6A6/MUMNUNti35pXhkQSlx\nRfwADOFmoiEzIWjnco8vQu3cu4uIHWkMKS7JWrxwrJpopk6LdphXNPkaX10VFMtC\nnbn3Hh1+wkhZY9EqDl5bKTrKbDJfYLoCn7Vi8dpV/p1DacTQT3hTdHhgf/UE1XqZ\nej7USHw2UOgWRcQl7r5jLvWZKoRVy77XRG2nqHd/rlk/eNiuthiqvHgzPfNjeSYU\nZzFSoRF03cRgJqswMtbIOH6MvdpKbOJCIfEqtkyDTkyw+KqtO6IrHpWAKCUIQ4M4\nIr/gz75YhM6x5xJpgIDY66Fssdoyj9cRLNjGgrmKwQKBgQDyaIuJEmDm7c3CQRQB\n7nPtd998C9V5Al9vp2tfH/RJUUy8Mk64vU2HnVf0ao34p7Z4dAWJfJ6Nocq/EH41\nifRxaSX02iUK0GZnajm99nb4lvOE99TxXa523QAoxl+m0QP5/+nLH24Mp9CZ55oj\n+TxS/tM6ZETtEhDsrCO23uq+IQKBgQDo6kl3KBuWK/KCZO1RGM61JuAyEISFWMaU\n9F9KFYbQVAZv2kINARjQxIB8IILyWMZJVpYO+o+OgeOAQMrcOOXRvThaxrNArwa2\nhdyxdnlIu1N5y9rp+lgxJAkUW74IpFlgBD5IugepivBRoekfX2wBfMlOun4PdBod\n8U4RzJKkIwKBgBpeZvdVKXdVXPGJlLyVDMVDKetbejA8otcJdjOVzUQAdQFv04Jj\nDUD4S64JvUHUNJQrwsJu7OxpMh3QlHoMdKu1jWxyIl9nxgvv0TIp0k0+VmUbdG2B\nDE5fwfmtgpAp4m3aebsfwx/bTWTAfdL19Kruj1mluJ21PmQQYZ4t54khAoGAMGpb\nIRjGOz4hZ/eA2UW12jQdkGqckXd1uArgL+8vmeiNefy9lCRxOxxNtP+xGJ1Zgm8s\nPCrbYn0fhE5znLl7FFEoAL6jDkQTuiczS/Rbm8HMxVmZxN9UK8rY1FGJvBQlu+7F\n36pD43tNHzrv0aStN9XvppzfjWjN8QFzAAItTU8CgYEA2YdWXEmFHwFXOF86YXoc\ni6TGpFE/k86tGys9ryeq786V8gPrKbN7aL5JQVHfP+BiFq2NFtZGnFCdR1/66aMq\nX/VFcIPhkMM1fnbS+xnS05mKSeJZNBoL34gnTPzOfDbwRBpbFrNlN01gw0HBBENY\nmwfcS0vsRkMhX6WE0dFQ+fk=\n-----END PRIVATE KEY-----\n",
+  "client_email": "kleber@rpi-watchlist.iam.gserviceaccount.com",
+  "client_id": "104754466222300121269",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/kleber%40rpi-watchlist.iam.gserviceaccount.com"
+}
