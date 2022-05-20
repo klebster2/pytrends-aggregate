@@ -30,7 +30,7 @@ In the "Market Pulses" data above, the following groups may be correlated.
 # fear
 '{"Market Pulses":["market crash","recession","pandemic","war","disaster","inflation","debt"]}'
 # greed
-'{"Market Pulses"}:["should I buy","FTSE","SP500","index fund","earnings","hodl"]'
+'{"Market Pulses":["should I buy","FTSE","SP500","index fund","earnings","hodl"]}'
 ```
 
 It may be interesting to compute statistics (Moving Averages, etc.) over the trends before providing them as input to a model.
