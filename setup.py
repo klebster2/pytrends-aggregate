@@ -20,8 +20,7 @@ setuptools.setup(
         "License :: Apache License version 2",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
+    packages=setuptools.find_packages(where="src/*"),
     python_requires=">=3.5",
     install_requires=['pytrends'],
     entry_points={
