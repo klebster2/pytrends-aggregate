@@ -5,8 +5,8 @@ import re
 from datetime import date
 from datetime import timedelta
 
-from src.table_manager import PyTrendTableManager
-from src.timeframes.timeframes import Timeframes
+from .table_manager import PyTrendTableManager
+from .timeframes.timeframes import Timeframes
 
 from pathlib import Path
 
@@ -26,7 +26,7 @@ def get_pytrends(pytrends_terms: list, days_ago=365):
 
     pytrend_table_manager = PyTrendTableManager(
         timeframes,
-        cutoff_pct=10,
+        cutoff_pct=10, # TODO move cutoff_pct to run_backoff func
         sleep=60,
         verbose=False,
     )
@@ -45,6 +45,7 @@ def get_args():
     parser.add_argument(
         '--json',
         dest='json',
+        required=True,
         type=json.loads,
         help='json to load e.g. \'{<term1>:[<term1a>,<term1b>],<term2>:[<term2a>,<term2b>]}\'',
     )
@@ -57,11 +58,13 @@ def get_args():
         '--sep',
         dest='csv_sep',
         type=str,
+        default=',',
         help='separator for csv file'
     )
     parser.add_argument(
         '--outpath',
         dest='outpath',
+        required=True,
         type=Path,
         help='file output path'
     )
@@ -69,6 +72,7 @@ def get_args():
         '-D',
         '--days',
         dest='days',
+        required=True,
         type=int,
         help='days ago'
     )

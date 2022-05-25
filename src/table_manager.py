@@ -1,7 +1,7 @@
-from src.timeframes.timeframes import Timeframes
-from src.kw_list import KwList
+from .timeframes.timeframes import Timeframes
+from .kw_list import KwList
 
-from src.utils import (
+from .utils import (
     drop_col_ispartial,
     drop_rows_ispartial_false,
     last_index_nonzero,
