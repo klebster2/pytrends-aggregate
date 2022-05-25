@@ -1,1 +1,1 @@
-from src.timeframes import timeframes
+from .timeframes import timeframes
